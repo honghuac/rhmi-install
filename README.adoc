@@ -27,7 +27,7 @@ These products include:
 * Launcher
 * 3Scale
 
-= Important Config Files and Settings
+== Important Config Files and Settings
 
 . inventories/group_vars/all/manifest.yaml
 .. Set `launcher:` to `true` in order activate installation
@@ -48,6 +48,33 @@ These products include:
 . playbooks/generate-customisation-inventory.yml
 .. Set RH SSO Playbook vars
 
+== Inventory File Format
+
+. Note your final inventory file
++
+[source]
+----
+[local:vars]
+ansible_connection=local
+
+run_master_tasks=false eval_app_host=apps.GUID.open.redhat.com
+openshift_master_url=https://master.GUID.open.redhat.com
+
+[local]
+127.0.0.1
+
+[OSEv3:children]
+master
+
+[OSEv3:vars]
+ansible_user=ec2-user
+
+[master]
+master.GUID.open.redhat.com
+
+[master:vars]
+run_master_tasks=false
+----
 
 == Prerequisites
 
