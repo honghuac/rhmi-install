@@ -57,7 +57,8 @@ These products include:
 [local:vars]
 ansible_connection=local
 
-run_master_tasks=false eval_app_host=apps.GUID.open.redhat.com
+run_master_tasks=false
+eval_app_host=apps.GUID.open.redhat.com
 openshift_master_url=https://master.GUID.open.redhat.com
 
 [local]
