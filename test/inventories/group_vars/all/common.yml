@@ -1,0 +1,13 @@
+---
+eval_action: install
+eval_namespace: eval
+eval_openshift_master_config_path: /etc/origin/master/master-config.yaml
+eval_self_signed_certs: true
+eval_sso_validate_certs: false
+eval_che_namespace: "{{ns_prefix | default('')}}codeready"
+eval_rhsso_namespace: "{{ns_prefix | default('')}}sso"
+threescale_namespace: "{{ns_prefix | default('')}}3scale"
+eval_launcher_namespace: "{{ns_prefix | default('')}}launcher"
+eval_launcher_sso_realm: launcher_realm
+eval_webapp_url_prefix: tutorial-web-app-webapp
+eval_seed_users_count: 5

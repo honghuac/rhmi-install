@@ -1,0 +1,108 @@
+---
+- name: Get Launcher dashboard url
+  shell: oc get route/launcher -o jsonpath='{.spec.host}' -n {{ launcher_namespace }}
+  register: launcher_host_cmd
+  when: launcher
+- set_fact:
+    launcher_dashboard_url: "https://{{ launcher_host_cmd.stdout}}"
+  when: launcher
+- set_fact:
+    launcher_dashboard_url: "https://launcher"
+  when: not launcher
+
+- name: Get Che dashboard url
+  shell: oc get route/codeready -o jsonpath='{.spec.host}' -n {{ che_namespace }}
+  register: che_host_cmd
+  when: che and launcher
+- set_fact:
+    che_dashboard_url: "https://{{ che_host_cmd.stdout}}"
+  when: che and launcher
+- set_fact:
+    che_dashboard_url: "https://che"
+  when: not (che and launcher)
+
+
+- name: Get 3scale dashboard url
+  shell: oc get route/system-provider-admin -o jsonpath='{.spec.host}' -n {{ threescale_namespace }}
+  register: threescale_host_cmd
+  when: threescale
+- set_fact:
+    threescale_dashboard_url: "https://{{ threescale_host_cmd.stdout}}"
+  when: threescale
+- set_fact:
+    threescale_dashboard_url: "https://threescale"
+  when: not threescale
+
+- name: Get apicurito dashboard url
+  shell: oc get route/apicurito -o jsonpath='{.spec.host}' -n {{ apicurito_namespace }}
+  register: apicurito_host_cmd
+  when: apicurito
+- set_fact:
+    apicurito_dashboard_url: "https://{{ apicurito_host_cmd.stdout}}"
+  when: apicurito
+- set_fact:
+    apicurito_dashboard_url: "https://apicurito"
+  when: not apicurito
+
+- name: Get shared Fuse dashboard url
+  shell: oc get route/syndesis -o jsonpath='{.spec.host}' -n {{ fuse_namespace }}
+  register: fuse_host_cmd
+  when: fuse
+- set_fact:
+    fuse_dashboard_url: "https://{{ fuse_host_cmd.stdout}}"
+  when: fuse
+- set_fact:
+    fuse_dashboard_url: "https://fuse"
+  when: not fuse
+
+- name: Get SSO route
+  shell: oc get route sso -o template --template \{\{.spec.host\}\} -n {{ eval_rhsso_namespace }}
+  register: sso_route
+
+# Create managed-service-broker namespace
+- include_role:
+    name: namespace
+  vars:
+    namespace: "{{ msbroker_namespace }}"
+    display_name: "Managed Service Broker"
+
+- include_role:
+    name: fuse_pull_secret
+  vars:
+    namespace: "{{ msbroker_namespace }}"
+  when: fuse_online
+
+- name: Add labels to namespace
+  shell: oc patch ns {{ msbroker_namespace }} --patch '{"metadata":{"labels":{"{{ monitoring_label_name }}":"{{ monitoring_label_value }}", "integreatly-middleware-service":"true"}}}'
+  register: namespace_patch
+  failed_when: namespace_patch.stderr != '' and 'not patched' not in namespace_patch.stderr
+  changed_when: namespace_patch.rc == 0
+
+- name: Create CRDs
+  shell: "oc apply -f {{ item }}"
+  with_items: "{{ msbroker_required_crds }}"
+
+- set_fact:
+    fuse_online_enabled: "true"
+  when: fuse_online
+
+- set_fact:
+    fuse_online_enabled: "false"
+  when: not fuse_online
+
+- name: Create managed service broker template in {{ msbroker_namespace }}
+  shell: oc process -f {{ msbroker_template }} \
+    -p 'NAMESPACE={{ msbroker_namespace }}' \
+    -p 'ROUTE_SUFFIX={{ route_suffix }}' \
+    -p 'LAUNCHER_DASHBOARD_URL={{ launcher_dashboard_url }}' \
+    -p 'CHE_DASHBOARD_URL={{ che_dashboard_url }}' \
+    -p 'THREESCALE_DASHBOARD_URL={{ threescale_dashboard_url }}' \
+    -p 'APICURIO_DASHBOARD_URL={{ apicurito_dashboard_url }}' \
+    -p 'SHARED_FUSE_DASHBOARD_URL={{ fuse_dashboard_url }}' \
+    -p 'SSO_URL=https://{{ sso_route.stdout }}/auth/admin/{{ sso_realm }}/console' \
+    -p 'FUSE_OPERATOR_RESOURCES_URL={{ msbroker_fuse_operator_resources_url }}' \
+    -p 'IMAGE_ORG={{ msbroker_image_org }}' \
+    -p 'IMAGE_TAG={{ msbroker_release_tag }}' \
+    -p 'MONITORING_KEY={{ monitoring_key }}' | oc create -n "{{ msbroker_namespace }}" -f -
+  register: create_msb_resources_cmd
+  failed_when: create_msb_resources_cmd.stderr != '' and 'AlreadyExists' not in create_msb_resources_cmd.stderr

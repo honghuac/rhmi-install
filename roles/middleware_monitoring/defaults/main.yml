@@ -1,0 +1,31 @@
+---
+monitoring_namespace: "{{ns_prefix | default('')}}middleware-monitoring"
+monitoring_display_name: "Managed Service Monitoring"
+monitoring_tmp_dir: /tmp
+
+# Resources to create via the oc tool.
+monitoring_resources:
+- "{{ middleware_monitoring_operator_resources }}/operator_roles/service_account.yaml"
+- "{{ middleware_monitoring_operator_resources }}/operator_roles/role.yaml"
+- "{{ middleware_monitoring_operator_resources }}/operator_roles/role_binding.yaml"
+- "{{ middleware_monitoring_operator_resources }}/crds/ApplicationMonitoring.yaml"
+- "{{ middleware_monitoring_operator_resources }}/examples/ApplicationMonitoring.yaml"
+- "{{ middleware_monitoring_operator_resources }}/operator.yaml"
+
+monitoring_resource_templates:
+# Grafana resources
+- "grafana_crd.yml"
+- "grafana_cluster_role.yml"
+- "grafana_cluster_role_binding.yml"
+- "grafana_dashboard_crd.yml"
+# Prometheus resources
+- "prometheus_crd.yml"
+- "prometheus_alert_manager_crd.yml"
+- "prometheus_service_monitor_crd.yml"
+- "prometheus_rule_crd.yml"
+- "prometheus_cluster_role_binding.yml"
+- "prometheus_cluster_role.yml"
+- "prometheus_operator_cluster_role_binding.yml"
+- "prometheus_operator_cluster_role.yml"
+- "alert_manager_cluster_role_binding.yml"
+- "alert_manager_cluster_role.yml"

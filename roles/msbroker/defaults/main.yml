@@ -1,0 +1,11 @@
+---
+msbroker_namespace: "{{ eval_msbroker_namespace | default('managed-service-broker')}}"
+msbroker_image_org: quay.io/integreatly
+msbroker_clusterrole: managed-service
+msbroker_clusterrolebinding: default-cluster-account-managed-service
+msbroker_deployment_name: msb
+msbroker_servicebroker_name: managed-service-broker
+monitoring_key: brokered-fuse-online
+msbroker_fuse_operator_resources_url: "{{ fuse_online_operator_resources }}"
+msbroker_required_crds:
+  - "{{ fuse_online_crd_resources }}"

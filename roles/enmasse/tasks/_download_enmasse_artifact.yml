@@ -1,0 +1,27 @@
+---
+- name: "Retrieve EnMasse {{ enmasse_version }} artifact"
+  git:
+    repo: "{{ enmasse_git_url }}"
+    dest: /tmp/enmasse-{{ enmasse_version }}
+    version: "{{ enmasse_version }}"
+    force: true
+
+- name: Ensure tmp dir exists
+  file:
+    path: /tmp/enmasse-{{ enmasse_version }}
+    state: directory
+
+- set_fact:
+    enmasse_playbook_location: enmasse-"{{ enmasse_version }}"/templates/ansible/playbooks/openshift/deploy_all.yml
+    enmasse_inventory_path: /tmp/enmasse-{{ enmasse_version }}/templates/ansible/inventory/
+    enmasse_authentication_services: [standard]
+
+- name: Generate keycloak admin password
+  set_fact:
+    enmasse_keycloak_admin_password: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+    enmasse_postgres_password: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+
+- name: Generate EnMasse inventory hosts file
+  template:
+    src: enmasse_hosts.j2
+    dest: "{{ enmasse_inventory_path }}/hosts"

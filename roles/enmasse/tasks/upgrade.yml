@@ -1,0 +1,14 @@
+---
+- include_tasks: "_download_enmasse_artifact.yml"
+
+- include_tasks: "_install_enmasse_from_artifact.yml"
+
+- name: Delete enmasse restapi route
+  shell:  oc delete route/restapi -n {{ enmasse_namespace }}
+  register: restapi_delete_cmd
+  failed_when: restapi_delete_cmd.stderr != '' and 'not found' not in restapi_delete_cmd.stderr
+
+- include_tasks: ./check_readiness.yml
+
+- name: Trigger restart of keycloak/sso to reconnect to postgresql
+  shell: oc -n {{ enmasse_namespace }} scale deployment/keycloak --replicas=0 && oc -n {{ enmasse_namespace }} rollout status deployment/keycloak

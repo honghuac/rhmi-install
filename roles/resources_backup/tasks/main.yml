@@ -1,0 +1,10 @@
+---
+# Kube resources backup backup
+- name: Create the resources backup job
+  include_role:
+    name: backup
+    tasks_from: _create_backup_cron_job.yml
+  vars:
+    cronjob_name: "{{ resources_cronjob_name }}"
+    component: resources
+    product_name: openshift

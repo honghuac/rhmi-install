@@ -1,0 +1,39 @@
+---
+- name: Delete managed service broker resources in {{ msbroker_namespace }}
+  shell: oc process -f {{ msbroker_template }} \
+    -p "NAMESPACE={{ msbroker_namespace }}" \
+    -p "ROUTE_SUFFIX='placeholder'" \
+    -p "LAUNCHER_DASHBOARD_URL='placeholder'" \
+    -p "CHE_DASHBOARD_URL='placeholder'" \
+    -p "THREESCALE_DASHBOARD_URL='placeholder'" \
+    -p "APICURIO_DASHBOARD_URL='placeholder'" \
+    -p "IMAGE_ORG={{ msbroker_image_org }}" \
+    -p "IMAGE_TAG={{ msbroker_release_tag }}" \
+    -p "SHARED_FUSE_DASHBOARD_URL='placeholder'" \
+    -p "MONITORING_KEY={{ monitoring_key }}" | oc delete -n "{{ msbroker_namespace }}" -f -
+  failed_when: false
+
+- name: "Delete project namespace: {{ msbroker_namespace }}"
+  shell: oc delete project {{ msbroker_namespace }}
+  register: output
+  failed_when: false
+
+- name: "Delete clusterservicebroker namespace: {{ msbroker_namespace }}"
+  shell: oc delete clusterservicebroker managed-service-broker
+  register: output
+  failed_when: false
+
+- name: "Delete clusterrole managed-service"
+  shell: oc delete clusterrole managed-service
+  register: output
+  failed_when: false
+
+- name: "Delete clusterrolebinding default-cluster-account-managed-service"
+  shell: oc delete clusterrolebinding default-cluster-account-managed-service
+  failed_when: false
+
+- name: Delete CRDs
+  shell: "oc delete -f {{ item }}"
+  register: output
+  failed_when: false
+  with_items: "{{ msbroker_required_crds }}"

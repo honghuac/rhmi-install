@@ -1,0 +1,72 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+
+ns_prefix: ''
+eval_action: install
+eval_namespace: eval
+eval_openshift_master_config_path: /etc/origin/master/master-config.yaml
+eval_self_signed_certs: true
+eval_sso_validate_certs: false
+eval_sso_url_suffix: /auth/admin/openshift/console
+eval_launcher_sso_realm: launcher_realm
+
+eval_apicurito_namespace: "{{ns_prefix | default('')}}apicurito"
+eval_che_namespace: "{{ns_prefix | default('')}}codeready"
+eval_launcher_namespace: "{{ns_prefix | default('')}}launcher"
+eval_rhsso_namespace: "{{ns_prefix | default('')}}sso"
+eval_webapp_namespace: "{{ns_prefix | default('')}}webapp"
+eval_msbroker_namespace: "{{ns_prefix | default('')}}managed-service-broker"
+eval_nexus_namespace: "{{ns_prefix | default('')}}nexus"
+eval_managed_fuse_namespace: "{{ns_prefix | default('')}}fuse"
+eval_enmasse_namespace: "{{ ns_prefix | default('')}}enmasse"
+
+eval_user_rhsso_namespace:  "{{ns_prefix | default('')}}user-sso"
+
+eval_seed_users_count: 1
+eval_webapp_url_prefix: tutorial-web-app-{{ eval_webapp_namespace }}
+
+eval_threescale_enable_wildcard_route: false
+# To use S3 storage instead of filesystem (PVC-based requiring ReadWriteMany)
+#eval_threescale_file_upload_storage: s3
+#eval_threescale_storage_s3_aws_access_key: <aws_access_key>
+#eval_threescale_storage_s3_aws_secret_key: <aws_secret_key>
+#eval_threescale_storage_s3_aws_region: <aws_region>
+#eval_threescale_storage_s3_aws_bucket: <s3_bucket_name>
+
+
+# openshift login as some product installs wont work with system:admin
+# NOTE: When run_master_tasks is false, this var will also be set to false, with the
+#       expectation that `oc` is already logged in as a cluster-admin user
+create_cluster_admin: true
+# override to set a namespace prefix.
+
+
+#run_master_tasks: (boolean)
+#
+# Default is set to true inline in various places.
+# No default is set here, as it wouldn't be overwriteable in an inventory file
+#
+# If true, any tasks that need to happen on the master will be run.
+# For example:
+# - adding an identity provider to the master-config.yaml
+# - adding a cors rule to the master-config.yaml
+# - retrieving master url & routing subdomain values from the master-config.yaml
+# - adding/removing a htpasswd user (integreatly-admin)
+#
+# If false, the master host will *not* be accessed at all.
+# In this case, the following should be done:
+# - run the install.yml playbook,
+#   - on a machine that is logged in (oc) with cluster-admin access (*not* system:admin user)
+#   - with values set for the following vars
+#     - eval_app_host (router subdomain, used for creating some routes & for 3scale)
+#     - openshift_master_url (master url for oauth use)
+# - after install, add the relevant cors rule to the master-config.yaml based on the webapp route
+# - add the cluster SSO identity provider to the master-config.yaml
+# - restart the master(s)
+
+#user_rhsso: (boolean)
+#
+# Default is set to true inline in various places.
+# No default is set here, as it wouldn't be overwriteable in an inventory file
+# If true, a separate RH-SSO instance will be provisioned to a separate namespace.
+# This instance can be used by user applications to provide identity management services.

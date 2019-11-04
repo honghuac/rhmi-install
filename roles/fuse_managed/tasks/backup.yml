@@ -1,0 +1,43 @@
+---
+# Create ServiceAccount
+- name: Create ServiceAccount and role binding
+  include_role:
+    name: backup
+    tasks_from: _setup_service_account.yml
+  vars:
+    binding_name: fuse_online_backup_binding
+    serviceaccount_namespace: '{{ fuse_namespace }}'
+
+# Postgres backup
+- name: Get fuse Postgres username
+  shell: oc get dc syndesis-db -n {{ fuse_namespace }} -o jsonpath='{ .spec.template.spec.containers[?(@.name=="postgresql")].env[?(@.name=="POSTGRESQL_USER")].value }'
+  register: fuse_postgres_username
+
+- name: Get fuse Postgres password
+  shell: oc get dc syndesis-db -n {{ fuse_namespace }} -o jsonpath='{ .spec.template.spec.containers[?(@.name=="postgresql")].env[?(@.name=="POSTGRESQL_PASSWORD")].value }'
+  register: fuse_postgres_password
+
+- name: Get fuse Postgres database
+  shell: oc get dc syndesis-db -n {{ fuse_namespace }} -o jsonpath='{ .spec.template.spec.containers[?(@.name=="postgresql")].env[?(@.name=="POSTGRESQL_DATABASE")].value }'
+  register: fuse_postgres_database
+
+- name: Create the Postgres credentials secret for backup
+  include_role:
+    name: backup
+    tasks_from: _create_postgres_secret.yml
+  vars:
+    secret_name: "{{ fuse_backup_postgres_secret_name }}"
+    secret_postgres_user: "{{ fuse_postgres_username.stdout }}"
+    secret_postgres_host: "syndesis-db.{{ eval_managed_fuse_namespace }}.svc"
+    secret_postgres_database: '{{ fuse_postgres_database.stdout }}'
+    secret_postgres_password: "{{ fuse_postgres_password.stdout }}"
+
+- name: Create the fuse Postgres CronJob
+  include_role:
+    name: backup
+    tasks_from: _create_backup_cron_job.yml
+  vars:
+    cronjob_name: fuse-postgres-backup
+    component: postgres
+    component_secret_name: "{{ fuse_backup_postgres_secret_name }}"
+    product_name: fuse-online
