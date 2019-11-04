@@ -48,9 +48,9 @@ These products include:
 . playbooks/generate-customisation-inventory.yml
 .. Set RH SSO Playbook vars
 
-== Inventory File Format
+== Hosts File Format
 
-. Note your final inventory file
+. Note your final host file must in this format:
 +
 [source]
 ----
